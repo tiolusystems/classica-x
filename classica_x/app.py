@@ -124,12 +124,18 @@ def main() -> None:
     server = create_server(service=smoke_service)
     # The fragment never travels in the HTTP request or browser history.
     url = f"http://127.0.0.1:{server.server_port}/#session={server.session_token}"
-    ready_file = os.environ.get("CLASSICA_X_SMOKE_READY_FILE")
+    # A first-party tabbed Clássica may start this independent process without
+    # opening a second browser. The one-time handshake stays in the user's
+    # profile, is consumed by its parent and is never sent to remote services.
+    ready_file = os.environ.get("CLASSICA_X_EMBED_READY_FILE") or os.environ.get("CLASSICA_X_SMOKE_READY_FILE")
     if ready_file:
-        Path(ready_file).write_text(
-            json.dumps({"port": server.server_port, "session": server.session_token}),
-            encoding="utf-8",
-        )
+        destination = Path(ready_file)
+        temporary = destination.with_suffix(".tmp")
+        with temporary.open("x", encoding="utf-8") as output:
+            if os.name != "nt":
+                os.chmod(temporary, 0o600)
+            json.dump({"port": server.server_port, "session": server.session_token}, output)
+        temporary.replace(destination)
     else:
         threading.Timer(.15, webbrowser.open, args=(url,)).start()
     print(f"Clássica X em http://127.0.0.1:{server.server_port}")
