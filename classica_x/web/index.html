@@ -1,11 +1,190 @@
-<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Clássica X</title>
-<style>body{max-width:760px;margin:3rem auto;padding:0 1rem;font:16px system-ui;color:#17212b}input,button{font:inherit;padding:.7rem;margin:.3rem 0}input{width:100%;box-sizing:border-box}button{cursor:pointer}#status{padding:1rem;background:#f0f3f5;white-space:pre-wrap}small{color:#53606d}</style>
-<main><h1>Clássica X</h1><p>Vídeos públicos do X, somente com autorização ou fundamento legal.</p><label>URL da publicação<input id="url" type="url" placeholder="https://x.com/usuario/status/123"></label><label><input id="authorized" type="checkbox"> Confirmo que tenho autorização ou fundamento legal.</label><label>Pasta de destino<input id="destination"></label><button id="preview">Ver prévia</button><button id="download">Baixar MP4</button><button id="cancel">Cancelar</button><pre id="status">Pronto.</pre><small>Não use para conteúdo protegido, privado ou restrito. Sem cookies, senha, CAPTCHA ou DRM.</small></main>
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <meta name="description" content="Clássica X · Vídeos públicos autorizados, by ☧ SYSTEMS.">
+  <title>Clássica X · Vídeos autorizados</title>
+  <style>
+    :root{--bg:#f6f2e9;--surface:#fffdf8;--ink:#29352e;--muted:#62675c;--line:#ded8c9;--gold:#856b3c;--gold-line:#d7c49c;--accent:#315747;--hover:#244536;--tint:#edf1e9;--error:#922f22;--focus:#135fd1;color-scheme:light}
+    *{box-sizing:border-box}
+    body{margin:0;background:var(--bg);color:var(--ink);font:clamp(1rem,.94rem + .2vw,1.125rem)/1.55 'Segoe UI',system-ui,sans-serif}
+    button,input{font:inherit;color:inherit}
+    button{cursor:pointer}
+    button:disabled{opacity:.6;cursor:default}
+    :focus-visible{outline:3px solid var(--focus);outline-offset:3px}
+    [hidden]{display:none!important}
+    h1,h2,h3,p{margin:0}
+    h1,h2,h3,.brand strong{font-family:Georgia,'Times New Roman',serif;font-weight:400}
+    a{color:var(--accent);text-underline-offset:3px}
+    .skip{position:absolute;left:-9999px}.skip:focus{left:1rem;top:1rem;z-index:2;background:var(--surface);padding:.6rem}
+    .app-header{min-height:5.25rem;display:flex;justify-content:space-between;align-items:center;gap:1rem;padding:1rem clamp(1rem,4vw,4rem);background:var(--surface);border-top:3px solid var(--ink);border-bottom:3px double var(--gold-line)}
+    .brand{display:flex;gap:.8rem;align-items:center;text-decoration:none;color:var(--ink)}
+    .brand-symbol{display:grid;place-items:center;background:var(--ink);color:#ecd5a6;width:2.75rem;height:2.75rem;font:2rem Georgia,serif;outline:1px solid var(--gold-line);outline-offset:3px}
+    .brand strong{display:block;font-size:1.65rem;line-height:1.2}
+    .brand-caption{display:block;color:var(--muted);font-size:.6rem;letter-spacing:.22em;margin-top:.3rem}
+    .header-status{font-size:.73rem;color:var(--muted);display:flex;gap:.5rem;align-items:center}
+    .dot{background:var(--accent);width:.45rem;height:.45rem;border-radius:50%}
+    main{width:min(100% - clamp(2rem,7vw,8rem),88rem);margin:auto;padding:2.5rem 0 1.5rem}
+    .intro{display:flex;justify-content:space-between;align-items:center;gap:1.5rem;border-bottom:1px solid var(--gold-line);padding-bottom:2rem;margin-bottom:2.1rem;position:relative}
+    .intro::after{content:'❦';position:absolute;bottom:-.78rem;left:calc(50% - 1.2rem);width:2.4rem;color:var(--gold);background:var(--bg);text-align:center;font:1.25rem Georgia,serif}
+    .eyebrow{font-size:.6rem;letter-spacing:.19em;color:var(--gold);margin-bottom:.6rem}
+    h1{font-size:clamp(2rem,1.4rem + 1.8vw,3rem);line-height:1.2}
+    .intro p:last-child{margin-top:.65rem;color:var(--muted);font-size:.9rem}
+    .local{border-left:1px solid var(--gold-line);padding-left:1rem;font-size:.7rem;color:var(--muted)}
+    .grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);gap:1.5rem;align-items:start}
+    .panel{min-width:0;background:var(--surface);border:1px solid var(--line);border-top:2px solid var(--gold-line);padding:1.5rem}
+    .panel-head{position:relative;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:start;gap:1rem;padding-bottom:1rem;margin-bottom:1.25rem}
+    .panel-head::after{content:'❦';position:absolute;right:0;bottom:-.7rem;color:var(--gold);background:var(--surface);padding-left:.6rem;font-family:Georgia,serif}
+    h2{font-size:1.35rem;line-height:1.4}
+    .step{color:var(--gold);font:.62rem Georgia,serif;letter-spacing:.1em;white-space:nowrap;margin-top:.4rem}
+    label.field{display:block;font-size:.825rem;font-weight:600;margin:.9rem 0 .5rem}
+    input[type=url],input[type=text]{display:block;width:100%;min-height:2.75rem;background:white;border:1px solid #b4b5a7;border-radius:2px;padding:.7rem .8rem;font-size:.825rem;min-width:0}
+    input::placeholder{color:#7a8179}
+    .hint{font-size:.75rem;line-height:1.6;color:var(--muted);margin-top:.5rem}
+    .rights{font-size:.75rem;line-height:1.6;display:flex;gap:.7rem;align-items:start;padding:.8rem 0;margin:1rem 0;border-top:1px solid var(--line)}
+    .rights input{width:1rem;height:1rem;margin-top:.2rem;accent-color:var(--accent);flex:0 0 auto}
+    .actions{display:flex;flex-wrap:wrap;gap:.6rem;margin:1.2rem 0}
+    .button{border-radius:2px;border:1px solid var(--line);padding:.7rem 1rem;min-height:2.75rem;background:var(--surface);font-weight:600;font-size:.825rem}
+    .button:hover:not(:disabled){background:#f1ede3}
+    .button.primary{background:var(--accent);border-color:var(--accent);color:#fff;flex:1 1 12rem}
+    .button.primary:hover:not(:disabled){background:var(--hover)}
+    .button.danger{color:var(--error)}
+    .notice{border-left:2px solid var(--gold-line);background:#f6f3eb;padding:.8rem;font-size:.77rem;color:var(--muted)}
+    .preview{border-left:2px solid var(--gold-line);background:#f6f3eb;padding:.8rem 1rem;margin-top:.8rem;overflow-wrap:anywhere}
+    .preview h3{font-size:1rem}.preview p{font-size:.8rem;color:var(--muted);margin-top:.3rem}
+    .state-text{font-weight:600;font-size:.9rem}
+    .status-pill{display:inline-flex;background:var(--tint);color:var(--accent);padding:.25rem .6rem;font-size:.7rem;margin-bottom:.8rem}
+    .state-message{font-size:.825rem;overflow-wrap:anywhere;color:var(--muted);margin-top:.5rem;white-space:pre-wrap}
+    .progress{height:.42rem;background:#dfe6dc;margin:1rem 0;border-radius:1rem;overflow:hidden}
+    .progress>span{height:100%;display:block;width:0;background:var(--accent);transition:width .25s}
+    .progress-meta{font-size:.75rem;color:var(--muted);font-variant-numeric:tabular-nums}
+    .history{list-style:none;margin:0;padding:0}
+    .history li{border-bottom:1px solid var(--line);padding:.8rem 0;overflow-wrap:anywhere}
+    .history strong{font-size:.77rem;font-weight:600;display:block}
+    .history small{display:block;font-size:.68rem;color:var(--muted);margin-top:.3rem}
+    .empty{font-size:.8rem;color:var(--muted);padding:1rem 0}
+    .subsection{margin-top:2rem;padding-top:1rem;border-top:1px solid var(--line)}
+    .subsection h3{font-size:1.1rem}
+    .footer{border-top:3px double var(--gold-line);display:flex;justify-content:space-between;align-items:center;gap:1rem;margin-top:2rem;padding-top:1.25rem;font-size:.75rem;color:var(--muted)}
+    .signature span{color:var(--gold);font-family:Georgia,serif;font-size:1.1em}
+    .error{color:var(--error)}
+    @media(max-width:70rem){.grid{grid-template-columns:1fr}}
+    @media(max-width:40rem){.app-header{padding:1rem}.local{display:none}main{width:calc(100% - 2rem);padding-top:1.75rem}.panel{padding:1.1rem}.intro{padding-bottom:1.7rem}.footer{flex-wrap:wrap}.brand strong{font-size:1.55rem}}
+    @media(prefers-reduced-motion:reduce){*{transition:none!important}}
+    @media(forced-colors:active){.panel,.app-header{border-color:CanvasText}.intro::after{display:none}}
+  </style>
+</head>
+<body>
+<a href="#main" class="skip">Ir para o conteúdo</a>
+<header class="app-header">
+  <div class="brand" aria-label="Clássica X"><span class="brand-symbol" aria-hidden="true">☧</span><div><strong>Clássica</strong><span class="brand-caption">VÍDEOS DO X</span></div></div>
+  <div class="header-status"><span class="dot" aria-hidden="true"></span><span>Aplicação local e independente</span></div>
+</header>
+<main id="main">
+  <section class="intro"><div><p class="eyebrow">☧ SYSTEMS · BIBLIOTECA DE VÍDEOS</p><h1>Baixar vídeo do X</h1><p>Cole uma publicação pública, confirme sua autorização e acompanhe o download.</p></div><span class="local">Processamento local</span></section>
+  <div class="grid">
+    <section class="panel" aria-labelledby="new-title">
+      <div class="panel-head"><h2 id="new-title">Novo download</h2><span class="step">I · ESCOLHER</span></div>
+      <form id="download-form">
+        <label class="field" for="url">Link da publicação do X</label>
+        <input id="url" type="url" required placeholder="https://x.com/usuario/status/…" spellcheck="false" autocomplete="off" aria-describedby="url-hint">
+        <p class="hint" id="url-hint">Uma publicação pública por vez. Não é necessário login.</p>
+        <button class="button" type="button" id="preview-button">Ver detalhes do link</button>
+        <div id="preview" class="preview" hidden aria-live="polite"></div>
+        <label class="field" for="destination">Pasta de destino</label>
+        <input id="destination" type="text" required spellcheck="false">
+        <p class="hint">Os arquivos são salvos diretamente nesta pasta. Use uma pasta existente ou a pasta padrão.</p>
+        <label class="rights" for="authorized"><input id="authorized" type="checkbox" required><span>Confirmo que possuo autorização ou fundamento legal para baixar este conteúdo, observando os direitos dos titulares e as condições da plataforma.</span></label>
+        <div class="actions">
+          <button class="button primary" type="submit" id="download-button">Baixar vídeo MP4 <span aria-hidden="true">↓</span></button>
+          <button class="button danger" type="button" id="cancel-button">Cancelar</button>
+        </div>
+      </form>
+      <div class="notice">Conteúdos privados, protegidos por DRM ou que exijam contornar acesso não são suportados. A plataforma X pode alterar a disponibilidade dos vídeos.</div>
+    </section>
+    <section class="panel" aria-labelledby="activity-title">
+      <div class="panel-head"><h2 id="activity-title">Seus downloads</h2><span class="step">II · ACOMPANHAR</span></div>
+      <p class="status-pill" id="status-pill">Pronto</p>
+      <p id="status-title" class="state-text" role="status" aria-live="polite">Aguardando um link</p>
+      <p id="status-message" class="state-message">O resultado do download aparecerá aqui.</p>
+      <div class="progress" role="progressbar" aria-label="Progresso do download" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="progress"><span id="progress-fill"></span></div>
+      <p class="progress-meta" id="progress-text">0%</p>
+      <section class="subsection" aria-labelledby="history-title">
+        <h3 id="history-title">Histórico recente</h3>
+        <p class="hint">O histórico fica somente neste computador. Os arquivos não são enviados para a Clássica.</p>
+        <ul class="history" id="history-list"></ul><p id="history-empty" class="empty">Nenhum download concluído nesta instalação.</p>
+      </section>
+    </section>
+  </div>
+  <footer class="footer"><span>Clássica X · Versão 1.0.0</span><span class="signature" aria-label="by ☧ SYSTEMS">by <span aria-hidden="true">☧</span> SYSTEMS</span></footer>
+</main>
 <script>
-const $=id=>document.getElementById(id),session=new URLSearchParams(location.hash.slice(1)).get('session');history.replaceState(null,'',location.pathname);const api=async(path,body)=>{let r=await fetch(path,{method:body?'POST':'GET',headers:{'Content-Type':'application/json','X-Classica-Session':session||''},body:body&&JSON.stringify(body)}),j=await r.json();if(!r.ok)throw Error(j.error||'Falha inesperada');return j};
-api('/api/settings').then(x=>$('destination').value=x.destination);
-function data(){return {url:$('url').value,destination:$('destination').value,authorized:$('authorized').checked}}
-$('preview').onclick=async()=>{try{$('status').textContent=JSON.stringify(await api('/api/preview',data()),null,2)}catch(e){$('status').textContent=e.message}};
-$('download').onclick=async()=>{try{await api('/api/settings',{destination:$('destination').value});$('status').textContent=JSON.stringify(await api('/api/download',data()),null,2)}catch(e){$('status').textContent=e.message}};
-$('cancel').onclick=()=>api('/api/cancel',{});setInterval(()=>api('/api/state').then(x=>$('status').textContent=JSON.stringify(x,null,2)),1000);
+'use strict';
+const $=id=>document.getElementById(id);
+const session=new URLSearchParams(location.hash.slice(1)).get('session')||'';
+history.replaceState(null,'',location.pathname);
+let previousStatus='',busy=false;
+async function api(path,body){
+ const options={method:body===undefined?'GET':'POST',headers:{'Content-Type':'application/json','X-Classica-Session':session}};
+ if(body!==undefined)options.body=JSON.stringify(body);
+ const response=await fetch('/api/'+path,options);
+ const result=await response.json();
+ if(!response.ok)throw new Error(result.error||'Não foi possível concluir a operação.');
+ return result;
+}
+function showError(error){$('status-pill').textContent='Falha';$('status-title').textContent='Atenção';$('status-message').textContent=error.message||'Falha inesperada';$('status-message').classList.add('error');}
+function data(){return {url:$('url').value.trim(),destination:$('destination').value.trim(),authorized:$('authorized').checked};}
+function paintState(state){
+ const status=state.status||'pronto';
+ $('status-pill').textContent=status[0].toUpperCase()+status.slice(1);
+ $('status-title').textContent=({pronto:'Aguardando um link',baixando:'Download em andamento',concluído:'Download concluído',cancelado:'Download cancelado',erro:'Não foi possível baixar'})[status]||status;
+ $('status-message').textContent=state.message||'';
+ $('status-message').classList.toggle('error',status==='erro');
+ const pct=Math.max(0,Math.min(100,Number(state.progress)||0));
+ $('progress-fill').style.width=pct+'%';
+ $('progress').setAttribute('aria-valuenow',String(pct));
+ $('progress-text').textContent=Math.round(pct)+'%';
+ busy=status==='baixando';
+ $('download-button').disabled=busy;
+ if(previousStatus!==status&&status==='concluído')void loadHistory();
+ previousStatus=status;
+}
+async function loadHistory(){
+ try{
+  const items=await api('history');
+  $('history-list').replaceChildren();
+  $('history-empty').hidden=Array.isArray(items)&&items.length>0;
+  for(const item of (Array.isArray(items)?items.slice(0,10):[])){
+   const li=document.createElement('li');
+   const title=document.createElement('strong');title.textContent=(item.file||'Arquivo').split(/[\\/]/).pop();
+   const info=document.createElement('small');info.textContent=item.file||'';
+   li.append(title,info);$('history-list').append(li);
+  }
+ }catch(error){$('history-empty').textContent='Histórico temporariamente indisponível.';}
+}
+$('preview-button').addEventListener('click',async()=>{
+ try{
+  const info=await api('preview',{url:data().url});
+  const box=$('preview');box.replaceChildren();
+  const title=document.createElement('h3');title.textContent=info.title||'Vídeo do X';
+  const meta=document.createElement('p');meta.textContent=info.duration?('Duração: '+Math.round(info.duration)+' segundos'):'Publicação identificada.';
+  box.append(title,meta);box.hidden=false;
+ }catch(error){showError(error);}
+});
+$('download-form').addEventListener('submit',async event=>{
+ event.preventDefault();
+ try{
+  await api('settings',{destination:data().destination});
+  paintState(await api('download',data()));
+ }catch(error){showError(error);}
+});
+$('cancel-button').addEventListener('click',async()=>{
+ try{paintState(await api('cancel',{}));}catch(error){showError(error);}
+});
+async function refresh(){try{paintState(await api('state'));}catch(error){showError(error);}}
+(async()=>{try{const settings=await api('settings');$('destination').value=settings.destination||'';}catch(error){showError(error);}await loadHistory();await refresh();setInterval(refresh,1000);})();
 </script>
+</body>
+</html>
