@@ -20,13 +20,14 @@ def test_final_path_must_be_reported_inside_destination(tmp_path):
         raise AssertionError("accepted unreported destination")
 
 
-def test_frozen_runtime_uses_internal_ffprobe_and_path(monkeypatch):
+def test_frozen_runtime_uses_internal_ffprobe_and_path(monkeypatch, tmp_path):
     monkeypatch.setattr("classica_x.service.sys.frozen", True, raising=False)
-    monkeypatch.setattr("classica_x.service.sys.executable", r"C:\ClassicaX\ClassicaX.exe")
-    assert DownloadService._tool("yt-dlp") == r"C:\ClassicaX\ClassicaXExtractor.exe"
-    assert DownloadService._tool("ffprobe") == r"C:\ClassicaX\_internal\ffprobe.exe"
+    executable = tmp_path / "ClassicaX.exe"
+    monkeypatch.setattr("classica_x.service.sys.executable", str(executable))
+    assert DownloadService._tool("yt-dlp") == str(tmp_path / "ClassicaXExtractor.exe")
+    assert DownloadService._tool("ffprobe") == str(tmp_path / "_internal" / "ffprobe.exe")
     path_parts = DownloadService._environment()["PATH"].split(os.pathsep)
-    assert path_parts[:2] == [r"C:\ClassicaX", r"C:\ClassicaX\_internal"]
+    assert path_parts[:2] == [str(tmp_path), str(tmp_path / "_internal")]
 
 
 def test_ffprobe_accepts_video_without_audio(monkeypatch, tmp_path):
