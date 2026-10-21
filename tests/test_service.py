@@ -90,13 +90,13 @@ def test_real_download_without_after_move_path_uses_only_its_own_mp4(monkeypatch
             return 0
 
     monkeypatch.setattr("classica_x.service.subprocess.Popen", FakeProcess)
-    monkeypatch.setattr("classica_x.service.DownloadService._inspect_media", lambda path: (True, True))
+    monkeypatch.setattr("classica_x.service.DownloadService._inspect_media", staticmethod(lambda path: (True, True)))
     monkeypatch.setattr("classica_x.service.load", lambda *_: [])
     monkeypatch.setattr("classica_x.service.save", lambda name, content: recorded.extend(content))
     service = DownloadService()
     service._job_id = 1
     service._run(1, threading.Event(), "https://x.com/u/status/123", tmp_path)
-    assert service.snapshot()["status"] == "concluído"
+    assert service.snapshot()["status"] == "concluído", service.snapshot()
     assert previous.read_bytes() == b"existing-user-video"
     files = sorted(tmp_path.iterdir())
     assert len(files) == 2, files
