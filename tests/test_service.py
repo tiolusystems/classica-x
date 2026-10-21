@@ -4,6 +4,21 @@ from pathlib import Path
 from classica_x.service import DownloadService
 
 
+def test_extractor_commands_ignore_user_configuration(tmp_path):
+    assert "--ignore-config" in DownloadService._command("https://x.com/user/status/1", tmp_path)
+
+
+def test_final_path_must_be_reported_inside_destination(tmp_path):
+    media = tmp_path / "done.mp4"; media.write_bytes(b"content")
+    assert DownloadService._reported_file([str(media)], tmp_path) == media
+    try:
+        DownloadService._reported_file(["C:/outside.mp4"], tmp_path)
+    except RuntimeError:
+        pass
+    else:
+        raise AssertionError("accepted unreported destination")
+
+
 def test_ffprobe_accepts_video_without_audio(monkeypatch, tmp_path):
     media = tmp_path / "video.mp4"
     media.write_bytes(b"content")
