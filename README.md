@@ -20,12 +20,12 @@ Atualize manualmente por uma nova pasta/pacote versionado. A aplicação não se
 
 ## Windows 10/11 — versão pronta
 
-Use o ZIP da [versão oficial v1.1.0](https://github.com/tiolusystems/classica-x/releases/tag/v1.1.0), arquivo `ClassicaX-1.1.0-Windows-x64.zip`. Extraia **toda a pasta**; não mova o executável isoladamente. Não é necessário instalar Python. O pacote ainda não tem assinatura digital; os releases incluem SHA-256 para conferir a integridade.
+Use o ZIP da [versão oficial v1.1.1](https://github.com/tiolusystems/classica-x/releases/tag/v1.1.1), arquivo `ClassicaX-1.1.1-Windows-x64.zip`. Extraia **toda a pasta**; não mova o executável isoladamente. Não é necessário instalar Python. O pacote ainda não tem assinatura digital; os releases incluem SHA-256 para conferir a integridade.
 
 O aplicativo pode ser instalado ou atualizado pela opção **Plataformas** do Clássica 2.3.0, quando essa versão estiver publicada. A atualização do módulo é opcional e não altera o Clássica YouTube.
 
 
-## Interface integrada (1.1.0)
+## Interface integrada (1.1.1)
 
 Quando iniciado pela central Clássica com a variável de sessão local
 `CLASSICA_X_EMBED_READY_FILE`, o módulo X não abre uma nova janela de navegador.
