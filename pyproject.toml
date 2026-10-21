@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "classica-x"
-version = "1.0.0"
+version = "1.1.0"
 description = "Aplicação local para downloads autorizados de publicações públicas do X"
 requires-python = ">=3.11"
 dependencies = ["yt-dlp==2025.1.15"]
