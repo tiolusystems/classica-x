@@ -10,7 +10,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import urlparse
 
-from .security import safe_destination
+from .security import default_destination, safe_destination
 from .service import DownloadService
 from .store import load, save
 
@@ -83,7 +83,7 @@ class Handler(BaseHTTPRequestHandler):
             if path == "/api/history":
                 return self._json(200, load("history.json", []))
             if path == "/api/settings":
-                return self._json(200, load("settings.json", {"destination": str(Path.home() / "Videos" / "Classica X")}))
+                return self._json(200, load("settings.json", {"destination": str(default_destination())}))
             return self._json(404, {"error": "Rota não encontrada."})
         file = WEB / ("index.html" if path == "/" else path.lstrip("/"))
         if file.is_file() and file.resolve().is_relative_to(WEB.resolve()):
@@ -120,7 +120,8 @@ class Handler(BaseHTTPRequestHandler):
 
 
 def main() -> None:
-    server = create_server()
+    smoke_service = DownloadService(allow_synthetic_media=os.environ.get("CLASSICA_X_SMOKE_ALLOW_SYNTHETIC_MEDIA") == "1")
+    server = create_server(service=smoke_service)
     # The fragment never travels in the HTTP request or browser history.
     url = f"http://127.0.0.1:{server.server_port}/#session={server.session_token}"
     ready_file = os.environ.get("CLASSICA_X_SMOKE_READY_FILE")

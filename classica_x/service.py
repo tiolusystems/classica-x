@@ -16,12 +16,13 @@ from .store import load, save
 
 
 class DownloadService:
-    def __init__(self):
+    def __init__(self, *, allow_synthetic_media: bool = False):
         self._lock = threading.RLock()
         self._process: subprocess.Popen | None = None
         self._worker: threading.Thread | None = None
         self._cancel_event: threading.Event | None = None
         self._job_id = 0
+        self._allow_synthetic_media = allow_synthetic_media
         self.state = {"status": "pronto", "message": "", "progress": 0, "preview": None}
 
     def snapshot(self) -> dict:
@@ -29,7 +30,7 @@ class DownloadService:
             return dict(self.state)
 
     def preview(self, url: str) -> dict:
-        url = validate_post_url(url)
+        url = validate_post_url(url, allow_synthetic_media=self._allow_synthetic_media)
         result = subprocess.run([self._tool("yt-dlp"), "--ignore-config", "--no-playlist", "--skip-download", "--dump-single-json", url],
                                 capture_output=True, text=True, timeout=45, check=False, env=self._environment())
         if result.returncode:
@@ -48,7 +49,8 @@ class DownloadService:
     def start(self, url: str, destination: str, authorized: bool) -> None:
         if not authorized:
             raise ValueError("Confirme que você possui autorização ou fundamento legal antes de baixar.")
-        url, output_dir = validate_post_url(url), safe_destination(destination)
+        url = validate_post_url(url, allow_synthetic_media=self._allow_synthetic_media)
+        output_dir = safe_destination(destination)
         with self._lock:
             if self._worker and self._worker.is_alive():
                 raise ValueError("Já existe um download em andamento.")
@@ -79,11 +81,12 @@ class DownloadService:
         lines: list[str] = []
         try:
             if cancelled.is_set():
+                self._set_state(job_id, status="cancelado", message="Download cancelado pelo usuário.")
                 return
             options = {"stdout": subprocess.PIPE, "stderr": subprocess.STDOUT, "text": True,
                        "encoding": "utf-8", "errors": "replace", "env": self._environment()}
             if os.name == "nt":
-                options["creationflags"] = subprocess.CREATE_NEW_PROCESS_GROUP
+                options["creationflags"] = subprocess.CREATE_NEW_PROCESS_GROUP | subprocess.CREATE_NO_WINDOW
             else:
                 options["start_new_session"] = True
             process = subprocess.Popen(self._command(url, output_dir), **options)
@@ -186,6 +189,7 @@ class DownloadService:
             if not self._worker or not self._worker.is_alive() or not self._cancel_event:
                 return
             self._cancel_event.set()
+            self.state.update(status="cancelado", message="Download cancelado pelo usuário.")
             if self._process:
                 self._terminate(self._process)
 

@@ -27,6 +27,6 @@ function Find-FFmpegBinary([string]$Name) {
 $ffmpeg = Find-FFmpegBinary 'ffmpeg'
 $ffprobe = Find-FFmpegBinary 'ffprobe'
 & $Python -m PyInstaller --noconfirm --clean --onefile --name ClassicaXExtractor scripts\extractor_entry.py
-& $Python -m PyInstaller --noconfirm --clean --onedir --name ClassicaX --add-data "classica_x/web;classica_x/web" --add-binary "$ffmpeg;." --add-binary "$ffprobe;." scripts\x_entry.py
+& $Python -m PyInstaller --noconfirm --clean --windowed --onedir --name ClassicaX --add-data "classica_x/web;classica_x/web" --add-binary "$ffmpeg;." --add-binary "$ffprobe;." scripts\x_entry.py
 Copy-Item dist\ClassicaXExtractor.exe dist\ClassicaX\ClassicaXExtractor.exe -Force
 & $Python scripts\smoke_windows_package.py --bundle dist\ClassicaX

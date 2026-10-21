@@ -32,6 +32,20 @@ def wait_for_ready(path: Path, process: subprocess.Popen[str]) -> dict[str, obje
     raise TimeoutError("ClassicaX.exe nao sinalizou inicializacao.")
 
 
+def api(port: int, token: str, path: str, payload: dict | None = None) -> tuple[int, dict]:
+    connection = HTTPConnection("127.0.0.1", port, timeout=10)
+    headers = {"Host": f"127.0.0.1:{port}", "X-Classica-Session": token}
+    body = None
+    if payload is not None:
+        body = json.dumps(payload).encode("utf-8")
+        headers.update({"Content-Type": "application/json", "Origin": f"http://127.0.0.1:{port}"})
+    connection.request("POST" if body else "GET", path, body=body, headers=headers)
+    response = connection.getresponse()
+    result = json.loads(response.read())
+    connection.close()
+    return response.status, result
+
+
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--bundle", required=True, type=Path)
@@ -58,23 +72,27 @@ def main() -> None:
         ready_file = root / "ready.json"
         environment = os.environ.copy()
         environment["CLASSICA_X_SMOKE_READY_FILE"] = str(ready_file)
+        environment["CLASSICA_X_SMOKE_ALLOW_SYNTHETIC_MEDIA"] = "1"
         environment["PATH"] = os.pathsep.join((str(bundle), str(bundle / "_internal"), environment.get("PATH", "")))
         application = subprocess.Popen([str(app)], cwd=bundle, env=environment, text=True)
         try:
             ready = wait_for_ready(ready_file, application)
-            connection = HTTPConnection("127.0.0.1", int(ready["port"]), timeout=5)
-            connection.request("GET", "/api/state", headers={
-                "Host": f"127.0.0.1:{ready['port']}",
-                "X-Classica-Session": str(ready["session"]),
-            })
-            response = connection.getresponse()
-            response.read()
-            connection.close()
-            if response.status != 200:
-                raise RuntimeError(f"API local retornou {response.status}.")
-
             url = f"http://127.0.0.1:{httpd.server_port}/{source.name}"
-            run([str(extractor), "--ignore-config", "--no-playlist", "--recode-video", "mp4", "-o", str(output_template), url], cwd=bundle, env=environment)
+            port, token = int(ready["port"]), str(ready["session"])
+            status, _ = api(port, token, "/api/download", {"url": url, "destination": str(root), "authorized": True})
+            if status != 202:
+                raise RuntimeError(f"API de download retornou {status}.")
+            deadline = time.monotonic() + 30
+            state: dict = {}
+            while time.monotonic() < deadline:
+                status, state = api(port, token, "/api/state")
+                if status != 200:
+                    raise RuntimeError(f"API local retornou {status}.")
+                if state.get("status") in {"concluído", "erro", "cancelado"}:
+                    break
+                time.sleep(.1)
+            if state.get("status") != "concluído":
+                raise RuntimeError(f"Download via API não concluiu: {state.get('message', '')}")
             outputs = list(root.glob("converted*.mp4"))
             if len(outputs) != 1 or outputs[0].stat().st_size == 0:
                 raise RuntimeError("Conversao nao produziu um MP4 valido.")
