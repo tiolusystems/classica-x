@@ -1,0 +1,20 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "classica-x"
+version = "1.0.0"
+description = "Aplicação local para downloads autorizados de publicações públicas do X"
+requires-python = ">=3.11"
+dependencies = ["yt-dlp==2025.1.15"]
+
+[project.optional-dependencies]
+test = ["pytest==8.3.5"]
+build = ["build==1.2.2.post1"]
+
+[project.scripts]
+classica-x = "classica_x.app:main"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

@@ -1,0 +1,11 @@
+<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Clássica X</title>
+<style>body{max-width:760px;margin:3rem auto;padding:0 1rem;font:16px system-ui;color:#17212b}input,button{font:inherit;padding:.7rem;margin:.3rem 0}input{width:100%;box-sizing:border-box}button{cursor:pointer}#status{padding:1rem;background:#f0f3f5;white-space:pre-wrap}small{color:#53606d}</style>
+<main><h1>Clássica X</h1><p>Vídeos públicos do X, somente com autorização ou fundamento legal.</p><label>URL da publicação<input id="url" type="url" placeholder="https://x.com/usuario/status/123"></label><label><input id="authorized" type="checkbox"> Confirmo que tenho autorização ou fundamento legal.</label><label>Pasta de destino<input id="destination"></label><button id="preview">Ver prévia</button><button id="download">Baixar MP4</button><button id="cancel">Cancelar</button><pre id="status">Pronto.</pre><small>Não use para conteúdo protegido, privado ou restrito. Sem cookies, senha, CAPTCHA ou DRM.</small></main>
+<script>
+const $=id=>document.getElementById(id), api=async(path,body)=>{let r=await fetch(path,{method:body?'POST':'GET',headers:{'Content-Type':'application/json'},body:body&&JSON.stringify(body)}),j=await r.json();if(!r.ok)throw Error(j.error||'Falha inesperada');return j};
+api('/api/settings').then(x=>$('destination').value=x.destination);
+function data(){return {url:$('url').value,destination:$('destination').value,authorized:$('authorized').checked}}
+$('preview').onclick=async()=>{try{$('status').textContent=JSON.stringify(await api('/api/preview',data()),null,2)}catch(e){$('status').textContent=e.message}};
+$('download').onclick=async()=>{try{await api('/api/settings',{destination:$('destination').value});$('status').textContent=JSON.stringify(await api('/api/download',data()),null,2)}catch(e){$('status').textContent=e.message}};
+$('cancel').onclick=()=>api('/api/cancel',{});setInterval(()=>api('/api/state').then(x=>$('status').textContent=JSON.stringify(x,null,2)),1000);
+</script>
