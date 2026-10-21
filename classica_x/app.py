@@ -11,7 +11,7 @@ from .service import DownloadService
 from .store import load, save
 
 SERVICE = DownloadService()
-WEB = Path(__file__).parent.parent / "web"
+WEB = Path(__file__).parent / "web"
 
 
 class Handler(BaseHTTPRequestHandler):

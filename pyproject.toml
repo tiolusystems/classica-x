@@ -16,5 +16,11 @@ build = ["build==1.2.2.post1"]
 [project.scripts]
 classica-x = "classica_x.app:main"
 
+[tool.setuptools]
+packages = ["classica_x"]
+
+[tool.setuptools.package-data]
+classica_x = ["web/*.html"]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
