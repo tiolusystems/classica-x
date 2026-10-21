@@ -7,7 +7,7 @@
   <meta name="description" content="Clássica X · Vídeos públicos autorizados, by ☧ SYSTEMS.">
   <title>Clássica X · Vídeos autorizados</title>
   <style>
-    :root{--bg:#f6f2e9;--surface:#fffdf8;--ink:#29352e;--muted:#62675c;--line:#ded8c9;--gold:#856b3c;--gold-line:#d7c49c;--accent:#315747;--hover:#244536;--tint:#edf1e9;--error:#922f22;--focus:#135fd1;color-scheme:light}
+    :root{--bg:#f7f8f6;--surface:#ffffff;--ink:#172b3a;--muted:#526676;--line:#d7e0e6;--gold:#8b6b35;--gold-line:#d7c49c;--accent:#0a655e;--hover:#074e49;--tint:#eaf5f2;--error:#922f22;--focus:#135fd1;color-scheme:light}
     *{box-sizing:border-box}
     body{margin:0;background:var(--bg);color:var(--ink);font:clamp(1rem,.94rem + .2vw,1.125rem)/1.55 'Segoe UI',system-ui,sans-serif}
     button,input{font:inherit;color:inherit}
@@ -70,6 +70,10 @@
     .footer{border-top:3px double var(--gold-line);display:flex;justify-content:space-between;align-items:center;gap:1rem;margin-top:2rem;padding-top:1.25rem;font-size:.75rem;color:var(--muted)}
     .signature span{color:var(--gold);font-family:Georgia,serif;font-size:1.1em}
     .error{color:var(--error)}
+    .embedded .app-header,.embedded .footer{display:none}
+    .embedded main{width:min(calc(100% - 2rem),88rem);padding:1.5rem 0}
+    .embedded .intro{margin-bottom:1.1rem;padding-bottom:1.1rem}
+    .embedded .brand-caption{color:var(--muted)}
     @media(max-width:70rem){.grid{grid-template-columns:1fr}}
     @media(max-width:40rem){.app-header{padding:1rem}.local{display:none}main{width:calc(100% - 2rem);padding-top:1.75rem}.panel{padding:1.1rem}.intro{padding-bottom:1.7rem}.footer{flex-wrap:wrap}.brand strong{font-size:1.55rem}}
     @media(prefers-reduced-motion:reduce){*{transition:none!important}}
@@ -118,12 +122,13 @@
       </section>
     </section>
   </div>
-  <footer class="footer"><span>Clássica X · Versão 1.0.0</span><span class="signature" aria-label="by ☧ SYSTEMS">by <span aria-hidden="true">☧</span> SYSTEMS</span></footer>
+  <footer class="footer"><span>Clássica X · Versão 1.1.0</span><span class="signature" aria-label="by ☧ SYSTEMS">by <span aria-hidden="true">☧</span> SYSTEMS</span></footer>
 </main>
 <script>
 'use strict';
 const $=id=>document.getElementById(id);
 const session=new URLSearchParams(location.hash.slice(1)).get('session')||'';
+if(new URLSearchParams(location.search).get('embedded')==='1')document.documentElement.classList.add('embedded');
 history.replaceState(null,'',location.pathname);
 let previousStatus='',busy=false;
 async function api(path,body){
