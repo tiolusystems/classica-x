@@ -75,7 +75,7 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
           name: ClassicaX-Windows-x64
-          path: stage/ClassicaX-1.1.0
+          path: stage/ClassicaX-1.1.1
       - name: Pack independently, checksum and publish
         shell: bash
         env:
@@ -84,13 +84,13 @@ jobs:
           set -euo pipefail
           mkdir -p dist
           cd stage
-          zip -q -r "../dist/ClassicaX-1.1.0-Windows-x64.zip" "ClassicaX-1.1.0"
+          zip -q -r "../dist/ClassicaX-1.1.1-Windows-x64.zip" "ClassicaX-1.1.1"
           cd ..
           cd dist
-          sha256sum "ClassicaX-1.1.0-Windows-x64.zip" > "ClassicaX-1.1.0-Windows-x64.zip.sha256"
-          sha256sum -c "ClassicaX-1.1.0-Windows-x64.zip.sha256"
-          if gh release view v1.1.0 --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
-            echo "v1.1.0 already exists; release remains immutable."
+          sha256sum "ClassicaX-1.1.1-Windows-x64.zip" > "ClassicaX-1.1.1-Windows-x64.zip.sha256"
+          sha256sum -c "ClassicaX-1.1.1-Windows-x64.zip.sha256"
+          if gh release view v1.1.1 --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            echo "v1.1.1 already exists; release remains immutable."
             exit 0
           fi
-          gh release create v1.1.0 "ClassicaX-1.1.0-Windows-x64.zip" "ClassicaX-1.1.0-Windows-x64.zip.sha256" --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --title "ClassicaX 1.1.0" --notes "Versão Windows x64 independente, sem assinatura digital. Instale apenas conteúdos autorizados."
+          gh release create v1.1.1 "ClassicaX-1.1.1-Windows-x64.zip" "ClassicaX-1.1.1-Windows-x64.zip.sha256" --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --title "ClassicaX 1.1.1" --notes "Versão Windows x64 independente, sem assinatura digital. Instale apenas conteúdos autorizados."

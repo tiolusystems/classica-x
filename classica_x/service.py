@@ -9,6 +9,8 @@ import subprocess
 import sys
 import threading
 import time
+import tempfile
+import uuid
 from pathlib import Path
 
 from .security import safe_destination, safe_filename, validate_post_url
@@ -79,6 +81,7 @@ class DownloadService:
     def _run(self, job_id: int, cancelled: threading.Event, url: str, output_dir: Path) -> None:
         process: subprocess.Popen | None = None
         lines: list[str] = []
+        staging: Path | None = None
         try:
             if cancelled.is_set():
                 self._set_state(job_id, status="cancelado", message="Download cancelado pelo usuário.")
@@ -89,7 +92,11 @@ class DownloadService:
                 options["creationflags"] = subprocess.CREATE_NEW_PROCESS_GROUP | subprocess.CREATE_NO_WINDOW
             else:
                 options["start_new_session"] = True
-            process = subprocess.Popen(self._command(url, output_dir), **options)
+            # Every operation owns an empty, private staging directory. This
+            # prevents pre-existing user files and other downloads from ever
+            # being mistaken for this job's finished media.
+            staging = Path(tempfile.mkdtemp(prefix=".classica-x-", dir=str(output_dir)))
+            process = subprocess.Popen(self._command(url, staging), **options)
             with self._lock:
                 if not self._current(job_id) or cancelled.is_set():
                     self._terminate(process)
@@ -109,10 +116,21 @@ class DownloadService:
                 return
             if returncode != 0:
                 raise RuntimeError("O extrator não concluiu o download. Confira se a publicação é pública e acessível.")
-            final_path = self._reported_file(lines, output_dir)
-            valid, has_audio = self._inspect_media(final_path)
+            # after_move:filepath is useful, but the extractor can omit it
+            # after post-processing or emit it differently on Windows. Select
+            # only from this job's isolated directory, never from user files.
+            staged_file = self._staged_mp4(lines, staging)
+            valid, has_audio = self._inspect_media(staged_file)
             if not valid:
-                raise RuntimeError("O arquivo final não passou na validação FFprobe.")
+                raise RuntimeError("O MP4 gerado não passou na validação FFprobe.")
+            if cancelled.is_set():
+                self._set_state(job_id, status="cancelado", message="Download cancelado pelo usuário.")
+                return
+            # A random suffix prevents collisions and accidental overwrites.
+            final_path = output_dir / f"{staged_file.stem} [{uuid.uuid4().hex[:8]}].mp4"
+            if final_path.exists():
+                raise RuntimeError("Não foi possível reservar um nome exclusivo para o arquivo.")
+            staged_file.rename(final_path)
             history = load("history.json", [])
             history.insert(0, {"url": url, "file": str(final_path), "at": int(time.time())})
             save("history.json", history[:100])
@@ -125,6 +143,27 @@ class DownloadService:
             with self._lock:
                 if self._current(job_id) and self._process is process:
                     self._process = None
+            if staging is not None:
+                shutil.rmtree(staging, ignore_errors=True)
+
+    @staticmethod
+    def _staged_mp4(lines: list[str], staging: Path) -> Path:
+        """Accept precisely one MP4 belonging to this download, not old files."""
+        try:
+            reported = DownloadService._reported_file(lines, staging)
+            if reported.suffix.lower() == ".mp4" and reported.parent.resolve() == staging.resolve():
+                return reported
+        except RuntimeError:
+            pass
+        candidates = [path for path in staging.iterdir()
+                      if path.is_file() and path.suffix.lower() == ".mp4"
+                      and not path.name.startswith(".")]
+        if len(candidates) != 1:
+            raise RuntimeError(
+                "O extrator terminou sem produzir um MP4 único e identificável. "
+                "Confira a publicação e tente novamente."
+            )
+        return candidates[0]
 
     @staticmethod
     def _reported_file(lines: list[str], output_dir: Path) -> Path:
