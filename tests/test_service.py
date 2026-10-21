@@ -6,7 +6,9 @@ from classica_x.service import DownloadService
 
 
 def test_extractor_commands_ignore_user_configuration(tmp_path):
-    assert "--ignore-config" in DownloadService._command("https://x.com/user/status/1", tmp_path)
+    command = DownloadService._command("https://x.com/user/status/1", tmp_path)
+    assert "--ignore-config" in command
+    assert command[command.index("--recode-video") + 1] == "mp4"
 
 
 def test_final_path_must_be_reported_inside_destination(tmp_path):

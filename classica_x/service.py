@@ -74,7 +74,7 @@ class DownloadService:
     def _command(url: str, output_dir: Path) -> list[str]:
         template = str(output_dir / "%(title).120B [%(id)s].%(ext)s")
         return [DownloadService._tool("yt-dlp"), "--ignore-config", "--no-playlist", "--restrict-filenames", "--newline",
-                "--print", "after_move:filepath", "-f", "bv*+ba/b", "--merge-output-format", "mp4", "-o", template, url]
+                "--print", "after_move:filepath", "-f", "bv*+ba/b", "--merge-output-format", "mp4", "--recode-video", "mp4", "-o", template, url]
 
     def _run(self, job_id: int, cancelled: threading.Event, url: str, output_dir: Path) -> None:
         process: subprocess.Popen | None = None
