@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import hmac
 import json
+import os
 import secrets
 import threading
 import webbrowser
@@ -122,7 +123,14 @@ def main() -> None:
     server = create_server()
     # The fragment never travels in the HTTP request or browser history.
     url = f"http://127.0.0.1:{server.server_port}/#session={server.session_token}"
-    threading.Timer(.15, webbrowser.open, args=(url,)).start()
+    ready_file = os.environ.get("CLASSICA_X_SMOKE_READY_FILE")
+    if ready_file:
+        Path(ready_file).write_text(
+            json.dumps({"port": server.server_port, "session": server.session_token}),
+            encoding="utf-8",
+        )
+    else:
+        threading.Timer(.15, webbrowser.open, args=(url,)).start()
     print(f"Clássica X em http://127.0.0.1:{server.server_port}")
     try:
         server.serve_forever()

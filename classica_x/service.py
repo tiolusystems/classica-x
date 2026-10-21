@@ -138,16 +138,22 @@ class DownloadService:
     @staticmethod
     def _tool(name: str) -> str:
         if getattr(sys, "frozen", False):
-            packaged = {"yt-dlp": "ClassicaXExtractor.exe", "ffprobe": "ffprobe.exe"}[name]
-            return str(Path(sys.executable).parent / packaged)
+            root = Path(sys.executable).parent
+            packaged = {
+                "yt-dlp": root / "ClassicaXExtractor.exe",
+                "ffprobe": root / "_internal" / "ffprobe.exe",
+            }[name]
+            return str(packaged)
         return name
 
     @staticmethod
     def _environment() -> dict[str, str]:
         environment = os.environ.copy()
         if getattr(sys, "frozen", False):
-            folder = str(Path(sys.executable).parent)
-            environment["PATH"] = folder + os.pathsep + environment.get("PATH", "")
+            root = Path(sys.executable).parent
+            environment["PATH"] = os.pathsep.join(
+                (str(root), str(root / "_internal"), environment.get("PATH", ""))
+            )
         return environment
 
     @staticmethod

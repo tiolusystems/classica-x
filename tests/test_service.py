@@ -1,4 +1,5 @@
 import json
+import os
 from pathlib import Path
 
 from classica_x.service import DownloadService
@@ -17,6 +18,15 @@ def test_final_path_must_be_reported_inside_destination(tmp_path):
         pass
     else:
         raise AssertionError("accepted unreported destination")
+
+
+def test_frozen_runtime_uses_internal_ffprobe_and_path(monkeypatch):
+    monkeypatch.setattr("classica_x.service.sys.frozen", True, raising=False)
+    monkeypatch.setattr("classica_x.service.sys.executable", r"C:\ClassicaX\ClassicaX.exe")
+    assert DownloadService._tool("yt-dlp") == r"C:\ClassicaX\ClassicaXExtractor.exe"
+    assert DownloadService._tool("ffprobe") == r"C:\ClassicaX\_internal\ffprobe.exe"
+    path_parts = DownloadService._environment()["PATH"].split(os.pathsep)
+    assert path_parts[:2] == [r"C:\ClassicaX", r"C:\ClassicaX\_internal"]
 
 
 def test_ffprobe_accepts_video_without_audio(monkeypatch, tmp_path):
