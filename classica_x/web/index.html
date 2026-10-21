@@ -70,9 +70,11 @@
     .footer{border-top:3px double var(--gold-line);display:flex;justify-content:space-between;align-items:center;gap:1rem;margin-top:2rem;padding-top:1.25rem;font-size:.75rem;color:var(--muted)}
     .signature span{color:var(--gold);font-family:Georgia,serif;font-size:1.1em}
     .error{color:var(--error)}
-    .embedded .app-header,.embedded .footer{display:none}
-    .embedded main{width:min(calc(100% - 2rem),88rem);padding:1.5rem 0}
-    .embedded .intro{margin-bottom:1.1rem;padding-bottom:1.1rem}
+    .embedded .app-header,.embedded .footer,.embedded .intro{display:none}
+    .embedded body{overflow:hidden}
+    .embedded main{width:100%;padding:0;margin:0}
+    .embedded .grid{margin:0}
+    .embedded .panel{box-shadow:none}
     .embedded .brand-caption{color:var(--muted)}
     @media(max-width:70rem){.grid{grid-template-columns:1fr}}
     @media(max-width:40rem){.app-header{padding:1rem}.local{display:none}main{width:calc(100% - 2rem);padding-top:1.75rem}.panel{padding:1.1rem}.intro{padding-bottom:1.7rem}.footer{flex-wrap:wrap}.brand strong{font-size:1.55rem}}
@@ -128,7 +130,18 @@
 'use strict';
 const $=id=>document.getElementById(id);
 const session=new URLSearchParams(location.hash.slice(1)).get('session')||'';
-if(new URLSearchParams(location.search).get('embedded')==='1')document.documentElement.classList.add('embedded');
+const isEmbedded=new URLSearchParams(location.search).get('embedded')==='1';
+if(isEmbedded){
+ document.documentElement.classList.add('embedded');
+ // The parent accepts this layout-only message only from its own X iframe
+ // and validates the sender's loopback origin. No session data is posted.
+ const sendHeight=()=>{
+   const height=Math.ceil(Math.max(document.body.scrollHeight,document.documentElement.scrollHeight));
+   if(height>0)window.parent.postMessage({type:'classica-x:height',height},'*');
+ };
+ window.addEventListener('load',()=>{sendHeight();setTimeout(sendHeight,120);});
+ if('ResizeObserver' in window)new ResizeObserver(sendHeight).observe(document.body);
+}
 history.replaceState(null,'',location.pathname);
 let previousStatus='',busy=false;
 async function api(path,body){
