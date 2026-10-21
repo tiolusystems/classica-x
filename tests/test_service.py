@@ -1,5 +1,6 @@
 import json
 import os
+import threading
 from pathlib import Path
 
 from classica_x.service import DownloadService
@@ -69,3 +70,54 @@ def test_ffprobe_rejects_non_video(monkeypatch, tmp_path):
         stdout = json.dumps({"format": {"duration": "5.0"}, "streams": [{"codec_type": "audio"}]})
     monkeypatch.setattr("classica_x.service.subprocess.run", lambda *args, **kwargs: Result())
     assert DownloadService._inspect_media(media) == (False, True)
+
+
+def test_real_download_without_after_move_path_uses_only_its_own_mp4(monkeypatch, tmp_path):
+    """The exact Windows/X failure: MP4 exists, but yt-dlp printed no final path."""
+    previous = tmp_path / "old.mp4"
+    previous.write_bytes(b"existing-user-video")
+    recorded = []
+
+    class FakeProcess:
+        def __init__(self, command, **kwargs):
+            output_template = command[command.index("-o") + 1]
+            staging = Path(output_template).parent
+            assert staging.parent == tmp_path
+            assert staging.name.startswith(".classica-x-")
+            (staging / "new.mp4").write_bytes(b"new-valid-video")
+            self.stdout = iter(["[download] 100% of media", "[VideoConvertor] Done"])
+        def wait(self):
+            return 0
+
+    monkeypatch.setattr("classica_x.service.subprocess.Popen", FakeProcess)
+    monkeypatch.setattr("classica_x.service.DownloadService._inspect_media", lambda path: (True, True))
+    monkeypatch.setattr("classica_x.service.load", lambda *_: [])
+    monkeypatch.setattr("classica_x.service.save", lambda name, content: recorded.extend(content))
+    service = DownloadService()
+    service._job_id = 1
+    service._run(1, threading.Event(), "https://x.com/u/status/123", tmp_path)
+    assert service.snapshot()["status"] == "concluído"
+    assert previous.read_bytes() == b"existing-user-video"
+    files = sorted(tmp_path.iterdir())
+    assert len(files) == 2, files
+    final = next(p for p in files if p.name != "old.mp4")
+    assert final.name.startswith("new [") and final.suffix == ".mp4"
+    assert final.read_bytes() == b"new-valid-video"
+    assert recorded[0]["file"] == str(final)
+
+
+def test_staged_mp4_requires_exactly_one_new_video(tmp_path):
+    old = tmp_path / "preexisting.mp4"
+    old.write_bytes(b"unrelated")
+    staging = tmp_path / ".classica-x-isolated"
+    staging.mkdir()
+    for filename in ("one.mp4", "two.mp4"):
+        (staging / filename).write_bytes(b"possible-video")
+    try:
+        DownloadService._staged_mp4([str(old)], staging)
+    except RuntimeError as error:
+        assert "MP4 único" in str(error)
+    else:
+        raise AssertionError("Two possible outputs were accepted")
+    (staging / "two.mp4").unlink()
+    assert DownloadService._staged_mp4([], staging).name == "one.mp4"
