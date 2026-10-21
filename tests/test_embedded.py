@@ -18,7 +18,7 @@ def test_embedded_session_avoids_browser_and_writes_one_time_handshake(monkeypat
 
     monkeypatch.setenv("CLASSICA_X_EMBED_READY_FILE", str(ready))
     monkeypatch.delenv("CLASSICA_X_SMOKE_READY_FILE", raising=False)
-    monkeypatch.setattr(app, "create_server", lambda: StubServer())
+    monkeypatch.setattr(app, "create_server", lambda **kwargs: StubServer())
     monkeypatch.setattr(app.webbrowser, "open", lambda *args: (_ for _ in ()).throw(AssertionError("Opened another browser")))
     app.main()
     assert json.loads(ready.read_text(encoding="utf-8")) == {
