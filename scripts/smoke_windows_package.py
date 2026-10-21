@@ -93,7 +93,7 @@ def main() -> None:
                 time.sleep(.1)
             if state.get("status") != "concluído":
                 raise RuntimeError(f"Download via API não concluiu: {state.get('message', '')}")
-            outputs = list(root.glob("converted*.mp4"))
+            outputs = list(root.glob("*.mp4"))
             if len(outputs) != 1 or outputs[0].stat().st_size == 0:
                 raise RuntimeError("Conversao nao produziu um MP4 valido.")
             probe = run([str(ffprobe), "-v", "error", "-show_entries", "stream=codec_type", "-of", "json", str(outputs[0])])
